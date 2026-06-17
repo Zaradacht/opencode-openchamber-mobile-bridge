@@ -171,6 +171,7 @@ async function ensureOpenChamber(project, containerId) {
 set -euo pipefail
 mkdir -p "$HOME/.secrets"
 chmod 700 "$HOME/.secrets"
+mkdir -p "$HOME/.local/state/openchamber" "$HOME/.local/bin"
 if [[ ! -s "$HOME/.secrets/openchamber-ui-password" ]]; then
   python3 - <<'PY' > "$HOME/.secrets/openchamber-ui-password"
 import secrets, string
@@ -186,6 +187,35 @@ fi
 openchamber stop --port ${containerPort} >/dev/null 2>&1 || true
 OPENCHAMBER_UI_PASSWORD="$pw" openchamber --lan --port ${containerPort} >/dev/null
 curl -fsS http://127.0.0.1:${containerPort}/health >/dev/null
+cat > "$HOME/.local/bin/opencode-openchamber-watchdog-${containerPort}" <<'SH'
+#!/usr/bin/env zsh
+set -u
+port="${containerPort}"
+password_file="$HOME/.secrets/openchamber-ui-password"
+log_file="$HOME/.local/state/openchamber/watchdog-${containerPort}.log"
+health_url="http://127.0.0.1:${containerPort}/health"
+while true; do
+  if ! curl -fsS "$health_url" 2>/dev/null | grep -q '"isOpenCodeReady":true'; then
+    pw="$(cat "$password_file" 2>/dev/null || true)"
+    if [[ -n "$pw" ]]; then
+      printf '%s restarting OpenChamber on port %s\n' "$(date -Is 2>/dev/null || date)" "$port" >> "$log_file"
+      openchamber stop --port "$port" >/dev/null 2>&1 || true
+      OPENCHAMBER_UI_PASSWORD="$pw" openchamber --lan --port "$port" >> "$log_file" 2>&1 || true
+    fi
+  fi
+  sleep "\${OPENCODE_OPENCHAMBER_WATCHDOG_INTERVAL_SECONDS:-60}"
+done
+SH
+chmod +x "$HOME/.local/bin/opencode-openchamber-watchdog-${containerPort}"
+pid_file="$HOME/.local/state/openchamber/watchdog-${containerPort}.pid"
+if [[ -s "$pid_file" ]]; then
+  old_pid="$(cat "$pid_file" 2>/dev/null || true)"
+  if [[ -n "$old_pid" ]]; then
+    kill "$old_pid" >/dev/null 2>&1 || true
+  fi
+fi
+nohup "$HOME/.local/bin/opencode-openchamber-watchdog-${containerPort}" >/dev/null 2>&1 &
+printf '%s' "$!" > "$pid_file"
 printf '%s' "$pw"
 `;
   const { stdout } = await dockerExec(containerId, projectsDir, script);
@@ -256,6 +286,7 @@ async function stopProject(project) {
   if (project.workspace) {
     const containerId = await runningContainerForWorkspace(project.workspace);
     if (containerId) {
+      await exec("docker", ["exec", "-u", "vscode", containerId, "sh", "-lc", `pid_file="$HOME/.local/state/openchamber/watchdog-${project.containerPort || DEFAULT_CONTAINER_PORT}.pid"; if [ -s "$pid_file" ]; then kill "$(cat "$pid_file")" >/dev/null 2>&1 || true; rm -f "$pid_file"; fi`]).catch(() => null);
       await exec("docker", ["exec", "-u", "vscode", containerId, "sh", "-lc", `openchamber stop --port ${project.containerPort || DEFAULT_CONTAINER_PORT} >/dev/null 2>&1 || true`]).catch(() => null);
     }
   }

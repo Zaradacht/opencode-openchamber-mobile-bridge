@@ -1,6 +1,6 @@
 {
   "name": "opencode-openchamber-mobile-bridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenCode helper package for exposing OpenChamber from devcontainers through a host bridge and Tailscale Serve.",
   "type": "module",
   "homepage": "https://github.com/Zaradacht/opencode-openchamber-mobile-bridge#readme",
