@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "description": "OpenCode helper package for exposing OpenChamber from devcontainers through a host bridge and Tailscale Serve.",
   "type": "module",
+  "homepage": "https://github.com/Zaradacht/opencode-openchamber-mobile-bridge#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zaradacht/opencode-openchamber-mobile-bridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Zaradacht/opencode-openchamber-mobile-bridge/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "index.js",
   "exports": {
     ".": "./index.js"

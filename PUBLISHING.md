@@ -21,3 +21,13 @@ grep -R "replace-with-private-value" .
 npm whoami
 npm publish
 ```
+
+If the first publish returns `E404 Not Found ... you do not have permission`, refresh npm auth and retry:
+
+```bash
+npm login --auth-type=web
+npm whoami
+npm publish --access public
+```
+
+For first-time unscoped packages, this usually means the active npm session cannot create the package name, not that the tarball is missing.
