@@ -1,0 +1,32 @@
+{
+  "name": "opencode-openchamber-mobile-bridge",
+  "version": "0.1.0",
+  "description": "OpenCode helper package for exposing OpenChamber from devcontainers through a host bridge and Tailscale Serve.",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js"
+  },
+  "bin": {
+    "opencode-openchamber-mobile-bridge": "bin/opencode-openchamber-mobile-bridge.mjs"
+  },
+  "files": [
+    "index.js",
+    "bin/",
+    "examples/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "openchamber",
+    "devcontainer",
+    "tailscale",
+    "mobile"
+  ],
+  "license": "MIT",
+  "oc-plugin": [
+    "server"
+  ]
+}
